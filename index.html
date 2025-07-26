@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>花火電卓</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        .calculator {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            max-width: 320px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .display-text {
+            color: #ffffff;
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: right;
+            word-break: break-all;
+            text-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .memory-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .btn-memory {
+            height: 45px;
+            background: linear-gradient(145deg, rgba(152, 251, 152, 0.8), rgba(144, 238, 144, 0.8));
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .btn-memory:hover {
+            background: linear-gradient(145deg, rgba(152, 251, 152, 0.9), rgba(144, 238, 144, 0.9));
+            box-shadow: 0 6px 20px rgba(152, 251, 152, 0.4);
+        }
+
+        .memory-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(152, 251, 152, 0.8);
+            color: #2c3e50;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-number {
+            background: linear-gradient(145deg, rgba(255, 182, 193, 0.8), rgba(255, 160, 122, 0.8));
+            color: #2c3e50;
+        }
+
+        .btn-number:hover {
+            background: linear-gradient(145deg, rgba(255, 182, 193, 0.9), rgba(255, 160, 122, 0.9));
+            box-shadow: 0 6px 20px rgba(255, 182, 193, 0.4);
+        }
+
+        .btn-operator {
+            background: linear-gradient(145deg, rgba(173, 216, 230, 0.8), rgba(135, 206, 235, 0.8));
+            color: #2c3e50;
+        }
+
+        .btn-operator:hover {
+            background: linear-gradient(145deg, rgba(173, 216, 230, 0.9), rgba(135, 206, 235, 0.9));
+            box-shadow: 0 6px 20px rgba(173, 216, 230, 0.4);
+        }
+
+        .btn-equals {
+            background: linear-gradient(145deg, rgba(221, 160, 221, 0.8), rgba(238, 130, 238, 0.8));
+            color: #2c3e50;
+        }
+
+        .btn-equals:hover {
+            background: linear-gradient(145deg, rgba(221, 160, 221, 0.9), rgba(238, 130, 238, 0.9));
+            box-shadow: 0 6px 20px rgba(221, 160, 221, 0.4);
+        }
+
+        .btn-clear {
+            background: linear-gradient(145deg, rgba(255, 218, 185, 0.8), rgba(255, 228, 196, 0.8));
+            color: #2c3e50;
+        }
+
+        .btn-clear:hover {
+            background: linear-gradient(145deg, rgba(255, 218, 185, 0.9), rgba(255, 228, 196, 0.9));
+            box-shadow: 0 6px 20px rgba(255, 218, 185, 0.4);
+        }
+
+        .btn-zero {
+            grid-column: span 2;
+            border-radius: 30px;
+        }
+
+        .fireworks-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* スマートフォン対応の追加メディアクエリ */
+        @media screen and (max-height: 600px) {
+            .calculator {
+                padding: 12px;
+                max-height: calc(100vh - 12px);
+            }
+            
+            .title {
+                font-size: 1.1rem;
+                margin-bottom: 8px;
+            }
+            
+            .display {
+                min-height: 50px;
+                padding: 12px;
+                margin-bottom: 8px;
+            }
+            
+            .memory-buttons {
+                margin-bottom: 8px;
+                gap: 6px;
+            }
+            
+            .buttons {
+                gap: 6px;
+            }
+            
+            .btn {
+                height: clamp(40px, 10vw, 50px);
+            }
+            
+            .btn-memory {
+                height: clamp(30px, 8vw, 35px);
+            }
+        }
+
+        @media screen and (max-height: 500px) {
+            .title {
+                font-size: 1rem;
+                margin-bottom: 6px;
+            }
+            
+            .display {
+                min-height: 45px;
+                padding: 10px;
+            }
+            
+            .btn {
+                height: clamp(35px, 9vw, 45px);
+                font-size: clamp(0.9rem, 3vw, 1.1rem);
+            }
+            
+            .btn-memory {
+                height: clamp(28px, 7vw, 32px);
+                font-size: clamp(0.7rem, 2.5vw, 0.8rem);
+            }
+        }
+
+        .btn {
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-number {
+            background: linear-gradient(145deg, rgba(255, 182, 193, 0.8), rgba(255, 160, 122, 0.8));
+            color: #2c3e50;
+        }
+
+        .btn-number:hover {
+            background: linear-gradient(145deg, rgba(255, 182, 193, 0.9), rgba(255, 160, 122, 0.9));
+            box-shadow: 0 6px 20px rgba(255, 182, 193, 0.4);
+        }
+
+        .btn-operator {
+            background: linear-gradient(145deg, rgba(173, 216, 230, 0.8), rgba(135, 206, 235, 0.8));
+            color: #2c3e50;
+        }
+
+        .btn-operator:hover {
+            background: linear-gradient(145deg, rgba(173, 216, 230, 0.9), rgba(135, 206, 235, 0.9));
+            box-shadow: 0 6px 20px rgba(173, 216, 230, 0.4);
+        }
+
+        .btn-equals {
+            background: linear-gradient(145deg, rgba(221, 160, 221, 0.8), rgba(238, 130, 238, 0.8));
+            color: #2c3e50;
+        }
+
+        .btn-equals:hover {
+            background: linear-gradient(145deg, rgba(221, 160, 221, 0.9), rgba(238, 130, 238, 0.9));
+            box-shadow: 0 6px 20px rgba(221, 160, 221, 0.4);
+        }
+
+        .btn-clear {
+            background: linear-gradient(145deg, rgba(255, 218, 185, 0.8), rgba(255, 228, 196, 0.8));
+            color: #2c3e50;
+        }
+
+        .btn-clear:hover {
+            background: linear-gradient(145deg, rgba(255, 218, 185, 0.9), rgba(255, 228, 196, 0.9));
+            box-shadow: 0 6px 20px rgba(255, 218, 185, 0.4);
+        }
+
+        .btn-zero {
+            grid-column: span 2;
+            border-radius: 30px;
+        }
+
+        .fireworks-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .title {
+            text-align: center;
+            color: #ffffff;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1 class="title">🎆 花火電卓 🎆</h1>
+        <div class="memory-indicator" id="memoryIndicator">M</div>
+        <div class="display">
+            <div class="display-text" id="display">0</div>
+        </div>
+        
+        <div class="memory-buttons">
+            <button class="btn btn-memory" onclick="memoryAdd()" title="メモリに加算">M+</button>
+            <button class="btn btn-memory" onclick="memorySubtract()" title="メモリから減算">M-</button>
+            <button class="btn btn-memory" onclick="memoryRecall()" title="メモリ呼び出し">MR</button>
+            <button class="btn btn-memory" onclick="memoryClear()" title="メモリクリア">MC</button>
+        </div>
+        
+        <div class="buttons">
+            <button class="btn btn-clear" onclick="clearAll()">AC</button>
+            <button class="btn btn-clear" onclick="clearEntry()">C</button>
+            <button class="btn btn-operator" onclick="inputOperator('/')" title="割り算">÷</button>
+            <button class="btn btn-operator" onclick="inputOperator('*')" title="掛け算">×</button>
+            
+            <button class="btn btn-number" onclick="inputNumber('7')">7</button>
+            <button class="btn btn-number" onclick="inputNumber('8')">8</button>
+            <button class="btn btn-number" onclick="inputNumber('9')">9</button>
+            <button class="btn btn-operator" onclick="inputOperator('-')" title="引き算">-</button>
+            
+            <button class="btn btn-number" onclick="inputNumber('4')">4</button>
+            <button class="btn btn-number" onclick="inputNumber('5')">5</button>
+            <button class="btn btn-number" onclick="inputNumber('6')">6</button>
+            <button class="btn btn-operator" onclick="inputOperator('+')" title="足し算">+</button>
+            
+            <button class="btn btn-number" onclick="inputNumber('1')">1</button>
+            <button class="btn btn-number" onclick="inputNumber('2')">2</button>
+            <button class="btn btn-number" onclick="inputNumber('3')">3</button>
+            <button class="btn btn-equals" onclick="calculate()" title="計算実行" style="grid-row: span 2; border-radius: 30px;">=</button>
+            
+            <button class="btn btn-number btn-zero" onclick="inputNumber('0')">0</button>
+            <button class="btn btn-number" onclick="inputNumber('.')">.</button>
+        </div>
+    </div>
+
+    <canvas class="fireworks-canvas" id="fireworksCanvas"></canvas>
+
+    <script>
+        // 電卓の状態管理
+        let display = document.getElementById('display');
+        let memoryIndicator = document.getElementById('memoryIndicator');
+        let currentInput = '0';
+        let operator = null;
+        let previousInput = null;
+        let waitingForOperand = false;
+        let memory = 0; // メモリ変数
+
+        // 花火エフェクト用キャンバス設定
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+        let fireworks = [];
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // 電卓機能
+        function updateDisplay() {
+            display.textContent = currentInput;
+        }
+
+        function updateMemoryIndicator() {
+            if (memory !== 0) {
+                memoryIndicator.classList.add('active');
+            } else {
+                memoryIndicator.classList.remove('active');
+            }
+        }
+
+        // メモリ機能
+        function memoryAdd() {
+            memory += parseFloat(currentInput) || 0;
+            updateMemoryIndicator();
+            triggerFireworks(); // メモリ操作時にも花火エフェクト
+        }
+
+        function memorySubtract() {
+            memory -= parseFloat(currentInput) || 0;
+            updateMemoryIndicator();
+            triggerFireworks(); // メモリ操作時にも花火エフェクト
+        }
+
+        function memoryRecall() {
+            currentInput = String(memory);
+            updateDisplay();
+            waitingForOperand = true;
+        }
+
+        function memoryClear() {
+            memory = 0;
+            updateMemoryIndicator();
+        }
+
+        function inputNumber(num) {
+            if (waitingForOperand) {
+                currentInput = num;
+                waitingForOperand = false;
+            } else {
+                currentInput = currentInput === '0' ? num : currentInput + num;
+            }
+            updateDisplay();
+        }
+
+        function inputOperator(nextOperator) {
+            const inputValue = parseFloat(currentInput);
+
+            if (previousInput === null) {
+                previousInput = inputValue;
+            } else if (operator) {
+                const currentValue = previousInput || 0;
+                const newValue = performCalculation[operator](currentValue, inputValue);
+
+                currentInput = String(newValue);
+                updateDisplay();
+                previousInput = newValue;
+            }
+
+            waitingForOperand = true;
+            operator = nextOperator;
+        }
+
+        function calculate() {
+            const inputValue = parseFloat(currentInput);
+
+            if (previousInput !== null && operator) {
+                const newValue = performCalculation[operator](previousInput, inputValue);
+                currentInput = String(newValue);
+                updateDisplay();
+                
+                // 花火エフェクトを発動
+                triggerFireworks();
+                
+                previousInput = null;
+                operator = null;
+                waitingForOperand = true;
+            }
+        }
+
+        function clearAll() {
+            currentInput = '0';
+            previousInput = null;
+            operator = null;
+            waitingForOperand = false;
+            updateDisplay();
+        }
+
+        function clearEntry() {
+            currentInput = '0';
+            updateDisplay();
+        }
+
+        const performCalculation = {
+            '/': (firstOperand, secondOperand) => firstOperand / secondOperand,
+            '*': (firstOperand, secondOperand) => firstOperand * secondOperand,
+            '+': (firstOperand, secondOperand) => firstOperand + secondOperand,
+            '-': (firstOperand, secondOperand) => firstOperand - secondOperand,
+        };
+
+        // 花火エフェクト
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 12; // 速度を上げて広がりを大きく
+                this.vy = (Math.random() - 0.5) * 12;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.015 + 0.008; // より長く光るように
+                this.color = color;
+                this.size = Math.random() * 5 + 2; // サイズを少し大きく
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.08; // 重力を少し弱く（ふわふわ感）
+                this.alpha -= this.decay;
+                this.size *= 0.985; // サイズの減衰を緩やかに
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 光る効果を適度に調整
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                
+                // 光輪効果を軽減（30%の確率のみ）
+                if (Math.random() < 0.3) {
+                    ctx.globalAlpha = this.alpha * 0.2;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+            }
+        }
+
+        class Firework {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = Math.random() * -15 - 5;
+                this.exploded = false;
+                this.color = `hsl(${Math.random() * 360}, 70%, 80%)`;
+            }
+
+            update() {
+                if (!this.exploded) {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vy += 0.2;
+
+                    if (this.vy >= 0) {
+                        this.explode();
+                    }
+                }
+            }
+
+            explode() {
+                this.exploded = true;
+                const particleCount = Math.random() * 25 + 15; // パーティクル数を調整（15-40個）
+                
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle(this.x, this.y, this.color));
+                    
+                    // 50%の確率で色違いパーティクルを生成
+                    if (Math.random() < 0.5) {
+                        const secondaryColor = `hsl(${(parseInt(this.color.match(/\d+/)[0]) + 60) % 360}, 70%, 80%)`;
+                        particles.push(new Particle(this.x, this.y, secondaryColor));
+                    }
+                }
+            }
+
+            draw() {
+                if (!this.exploded) {
+                    ctx.save();
+                    ctx.fillStyle = this.color;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+        }
+
+        function triggerFireworks() {
+            const fireworkCount = Math.random() * 3 + 2; // 花火の数を調整（2-5個）
+            
+            for (let i = 0; i < fireworkCount; i++) {
+                setTimeout(() => {
+                    const x = Math.random() * canvas.width;
+                    const y = canvas.height;
+                    fireworks.push(new Firework(x, y));
+                }, i * 180); // 間隔を少し調整
+            }
+            
+            // 連鎖花火を軽減
+            if (Math.random() < 0.7) { // 70%の確率で連鎖花火
+                setTimeout(() => {
+                    const chainFireworks = Math.random() * 2 + 1; // 1-3個に減少
+                    for (let i = 0; i < chainFireworks; i++) {
+                        setTimeout(() => {
+                            const x = Math.random() * canvas.width;
+                            const y = canvas.height;
+                            fireworks.push(new Firework(x, y));
+                        }, i * 120);
+                    }
+                }, 600);
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 花火の更新と描画
+            fireworks = fireworks.filter(firework => {
+                firework.update();
+                firework.draw();
+                return !firework.exploded;
+            });
+
+            // パーティクルの更新と描画
+            particles = particles.filter(particle => {
+                particle.update();
+                particle.draw();
+                return particle.alpha > 0;
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // 初期化
+        updateMemoryIndicator();
+        animate();
+
+        // キーボード対応
+        document.addEventListener('keydown', function(event) {
+            const key = event.key;
+            
+            if (key >= '0' && key <= '9') {
+                inputNumber(key);
+            } else if (key === '.') {
+                inputNumber('.');
+            } else if (key === '+') {
+                inputOperator('+');
+            } else if (key === '-') {
+                inputOperator('-');
+            } else if (key === '*') {
+                inputOperator('*');
+            } else if (key === '/') {
+                event.preventDefault();
+                inputOperator('/');
+            } else if (key === '=' || key === 'Enter') {
+                event.preventDefault();
+                calculate();
+            } else if (key === 'Escape') {
+                clearAll();
+            } else if (key === 'Backspace') {
+                clearEntry();
+            }
+        });
+    </script>
+</body>
+</html>
